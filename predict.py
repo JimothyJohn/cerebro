@@ -1,6 +1,5 @@
 import cog
 import torch
-from io import BytesIO
 import json
 
 
@@ -24,7 +23,7 @@ class Predictor(cog.BasePredictor):
         """Load the model into memory to make running multiple predictions efficient"""
         self.net = torch.hub.load("ultralytics/yolov5", "yolov5s")
         # Alternatively use a custom model
-        # self.net = torch.hub.load("ultralytics/yolov5", "custom", "./<your-weights-here>.pt")
+        # self.net = torch.hub.load("ultralytics/yolov5", "custom", "./boxes.pt")
 
     # Define the input types for a prediction
     def predict(

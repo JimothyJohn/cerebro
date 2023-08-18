@@ -12,4 +12,4 @@ def process_image(mediaURL):
 
     return resp_str["status"]
 
-process_image("https://thefoodxp.com/wp-content/uploads/2019/12/1920_tulsaopening2of4-837991.jpg")
+process_image("@data/images/zidane.jpg")

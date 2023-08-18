@@ -58,8 +58,8 @@ This will output a JSON list of all detections by default:
 
 ```json
 {
-  'status': 'succeeded',
-  'output': '[
+  "status": "succeeded",
+  "output": [
     {
       "xmin":751.9083251953,
       "ymin":45.5722045898,
@@ -70,7 +70,7 @@ This will output a JSON list of all detections by default:
       "name":"person"
     },
     ...
-  ]'
+  ]
 }
 ```
 
