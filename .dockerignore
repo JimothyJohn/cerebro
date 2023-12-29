@@ -1,6 +1,0 @@
-data/
-docker/
-utils/
-__pycache__/
-*.md
-config.yml

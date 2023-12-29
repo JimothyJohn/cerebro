@@ -1,8 +1,14 @@
-# Deploy YOLO
+![cerebro](docs/cerebro.png)
 
-This fork uses Replicate's 🐣 [Cog](https://github.com/replicate/cog) system to quickly deploy Ultralytic's 🚀 [PyTorch implementation](https://github.com/ultralytics/yolov5) of YOLOv5.
+# Cerebro
+
+Uses Replicate's 🐣 [Cog](https://github.com/replicate/cog) system to quickly deploy Ultralytic's 🚀 [PyTorch implementation](https://github.com/ultralytics/yolov5) of YOLOv5 as an AWS [Lambda function](https://aws.amazon.com/lambda/).
 
 See [Cog](https://replicate.com/docs/creating-a-model#install-cog) and [YOLOv5](https://docs.ultralytics.com) for full documentation on training, testing and deployment.
+
+## TODO 
+
+[Rea tutorial](https://www.trainyolo.com/blog/deploy-yolov8-on-aws-lambda)
 
 ## Quickstart
 
@@ -108,3 +114,4 @@ ADVANCED: Deploy in the cloud using the [Cloudflare Tunnel guide](DEPLOYMENT.md)
 - Simplify JSON extraction
 - Bridge to Jetson platform
 - Training tutorial with Roboflow
+- CI/CD to AWS Lambda
