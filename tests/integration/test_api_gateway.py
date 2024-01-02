@@ -78,10 +78,10 @@ class TestApiGateway:
         for detection in body["detections"]:
             assert "bbox" in detection
             assert "score" in detection
-            assert "class_id" in detection
+            assert "class_name" in detection
             assert isinstance(detection["bbox"], list)
             assert isinstance(detection["score"], float)
-            assert isinstance(detection["class_id"], int)
+            assert isinstance(detection["class_name"], str)
             assert len(detection["bbox"]) == 4  # Typically, bbox should have 4 values
 
         # Performance Assertion

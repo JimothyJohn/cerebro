@@ -1,15 +1,31 @@
 import json
-import pytest
-from cerebro.app import lambda_handler
+import os
+import requests
+from cerebro.app import *
 import base64
-from tests.utils import *
+from tests.utils import encode_image_to_base64
 
-@pytest.fixture()
-def apigw_event(test_body) -> dict:
+endpoint = os.environ.get("AWS_API_ENDPOINT")
+
+def encode_image_to_base64(image_path: str) -> str:
+    """
+    Encodes the image to a Base64 string.
+
+    Returns:
+        str: Base64 encoded string of the image.
+    """
+    with open(image_path, 'rb') as image_file:
+        encoded_string = base64.b64encode(image_file.read()).decode('utf-8')
+    
+    return encoded_string
+
+def apigw_event() -> dict:
     """ Generates API GW Event"""
 
+    encoded_string = encode_image_to_base64("images/zidane.jpg")
+
     return {
-        "body": test_body,
+        "body": json.dumps({"image": encoded_string}),
         "resource": "/{proxy+}",
         "requestContext": {
             "resourceId": "123456",
@@ -62,23 +78,26 @@ def apigw_event(test_body) -> dict:
 
 
 
-def test_lambda_handler(apigw_event):
+def test_local() -> None:
 
-    ret = lambda_handler(apigw_event, "")
+    ret = lambda_handler(apigw_event(), "")
     data = json.loads(ret["body"])
 
-    # Basic Assertions
-    assert ret["statusCode"] == 200
-    assert "detections" in data
-    assert isinstance(data["detections"], list)
-    assert len(data["detections"]) > 0
+    print(data["detections"])
 
-    # Check each detection
-    for detection in data["detections"]:
-        assert "bbox" in detection
-        assert "score" in detection
-        assert "class_id" in detection
-        assert isinstance(detection["bbox"], list)
-        assert isinstance(detection["score"], float)
-        assert isinstance(detection["class_id"], int)
-        assert len(detection["bbox"]) == 4  # Typically, bbox should have 4 values
+def test_cloud() -> None:
+    """ Call the API Gateway endpoint and check the response """
+    data = json.dumps({
+            "image": encode_image_to_base64("images/zidane.jpg"),
+            "size": 640,
+            "conf_thres": 0.7,
+            "iou_thres": 0.5
+            })
+    response = requests.post(endpoint, data=data)
+
+    print(response.text)
+
+
+
+test_local()
+test_cloud()

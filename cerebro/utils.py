@@ -32,21 +32,12 @@ class ImageEncoder:
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Encode an image to Base64 for HTTP requests."
-    )
-    parser.add_argument("image_path", type=str, help="Path to the image file")
-    args = parser.parse_args()
-
-    encoder = ImageEncoder(args.image_path)
+    IMAGE_PATH = ""
+    encoder = ImageEncoder(IMAGE_PATH)
     image_data_for_json = encoder.get_image_data_for_json()
 
     json_object = json.dumps({"image": image_data_for_json}, indent=4)
     print(json_object)
-
-
-if __name__ == "__main__":
-    main()
 
 
 def prepare_input(img, size):

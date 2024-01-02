@@ -50,13 +50,12 @@ main() {
     done
 
     # Deploy updates to AWS
-    pushd lambda/ > /dev/null && \
-        black cerebro/ && \
+    pipenv run black cerebro/ && \
         sam validate && \
         sam build && \
-        pipenv run python -m pytest tests/unit && \
-        sam sync --stack-name sam-app --watch && \
-        popd > /dev/null
+        pipenv install && \
+        PYTHONPATH="$(pwd)"/cerebro pipenv run python -m pytest tests/unit && \
+        sam sync --stack-name sam-app --watch
 }
 
 main "$@"

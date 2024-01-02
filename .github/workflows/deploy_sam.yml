@@ -1,0 +1,48 @@
+name: Lambda CI/CD
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install black pytest pipenv aws-sam-cli
+
+    - name: Lint with black
+      run: |
+        pushd lambda/ > /dev/null
+        black cerebro/
+
+    - name: Validate SAM template
+      run: sam validate
+
+    - name: Build SAM application
+      run: sam build
+
+    - name: Run unit tests
+      run: pipenv run python -m pytest tests/unit
+
+    - name: Sync with AWS
+      run: sam sync --stack-name sam-app --watch
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        AWS_REGION: 'us-east-1'
+
+    - name: Clean up
+      run: popd > /dev/null

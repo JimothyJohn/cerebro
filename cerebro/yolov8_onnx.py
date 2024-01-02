@@ -1,6 +1,6 @@
 # https://github.com/trainyolo/YOLO-ONNX/blob/main/yolo_onnx/yolov8_onnx.py
 import onnxruntime
-from . import utils
+import utils
 
 
 class YOLOv8:
