@@ -23,39 +23,27 @@ EOF
 
 # Main function of the script
 main() {
-    local LIB_DIR=""
-    local FUNCTION="cerebro"
 
-    # Parse arguments
-    while [[ "$#" -gt 0 ]]; do
-        case "$1" in
-            -h|--help)
-                help_function
-                exit 0
-                ;;
-            --lib-dir)
-                LIB_DIR="$2"
-                shift 2
-                ;;
-            -f|--function)
-                FUNCTION="$2"
-                shift 2
-                ;;
-            *)
-                echo "Unknown parameter passed: $1"
-                help_function
-                exit 1
-                ;;
-        esac
-    done
+    # Determine the CPU architecture
+    cpu_arch=$(uname -m)
+    local TAG="latest-cpu"
+
+    # Check if the CPU architecture is ARM or x86
+    if [[ "$cpu_arch" == "arm"* ]] || [[ "$cpu_arch" == "aarch64" ]]; then
+        TAG="latest-arm64"
+    else
+        echo "CPU Architecture is neither ARM nor x86. Detected: $cpu_arch"
+        exit 1
+    fi
 
     # Deploy updates to AWS
     docker run --rm -it \
         -v $(pwd):/workspace \
         -w /workspace \
-        ultralytics/ultralytics:latest-arm64 \
+        ultralytics/ultralytics:"$TAG" \
         yolo detect export model=yolov8n.pt format=onnx && \
-        rm yolov8n.pt
+        rm yolov8n.pt && \
+        mv yolov8n.onnx cerebro/models
 }
 
 main "$@"

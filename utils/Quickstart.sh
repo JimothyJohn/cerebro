@@ -12,12 +12,14 @@ fi
 # Function to display help
 help_function() {
     cat <<EOF
+
 Usage: $(basename "$0") [-h] [--lib-dir LIB_DIR]
 
 Options:
   -h, --help       Display this help message and exit
   --lib-dir        Optional path to the lib/ directory
   -f, --function   Name of the lambda function
+
 EOF
 }
 
@@ -29,26 +31,45 @@ command_exists() {
 # Check required dependencies
 check_dependencies() {
     if ! command_exists docker; then
-        echo "Docker is not installed. Install it using:"
-        echo "curl -fsSL https://get.docker.com -o get-docker.sh && sudo sh get-docker.sh"
-        exit 1
-    fi
+        cat <<EOF
 
-    if ! command_exists aws; then
-        echo "AWS CLI is not installed. Install it from:"
-        echo "https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html"
+Docker is not installed. Install it using:
+
+curl -fsSL https://get.docker.com -o get-docker.sh && \\
+    sudo sh get-docker.sh
+
+EOF
         exit 1
     fi
 
     if ! command_exists sam; then
-        echo "AWS SAM CLI is not installed. Install it from:"
-        echo "https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/install-sam-cli.html"
+        cat <<EOF
+
+AWS SAM CLI is not installed. Install it with:
+
+wget https://github.com/aws/aws-sam-cli/releases/latest/download/aws-sam-cli-linux-x86_64.zip && \\
+    unzip aws-sam-cli-linux-x86_64.zip -d sam-installation && \\
+    sudo ./sam-installation/install && \\
+    rm -rf aws-sam-cli-linux-x86_64.zip sam-installation
+
+EOF
         exit 1
     fi
 
-    if ! command_exists python3 || ! command_exists pip || ! command_exists pipenv; then
-        echo "One or more Python related dependencies (Python3, pip, pipenv) are not installed."
-        echo "Please install them for your platform."
+    if ! command_exists pip; then
+        cat <<EOF
+
+Pip is not installed. Install it with:
+
+Linux:
+
+sudo apt install python3-pip
+
+MacOS:
+
+brew install python3-pip
+
+EOF
         exit 1
     fi
 }
@@ -79,14 +100,21 @@ main() {
     # Check for required dependencies
     check_dependencies
 
+    # Install virtual environment 
+    echo "Activating environment..."
+    python3 -m venv venv && \
+        source venv/bin/activate && \
+        pip install -q --upgrade pip && \
+        pip install -q -r requirements.txt
+
     # Deploy updates to AWS
-    pushd lambda/ > /dev/null && \
-        pipenv run black cerebro/ && \
+    echo "Updating endpoint..."
+    black -q cerebro/ && \
         sam validate && \
         sam build && \
-        pipenv run python -m pytest tests/unit && \
-        sam sync --stack-name sam-app --watch && \
-        popd > /dev/null
+        PYTHONPATH="$(pwd)"/cerebro pytest -q tests/unit && \
+        deactivate && \
+        sam sync --stack-name sam-app --watch
 }
 
 main "$@"
