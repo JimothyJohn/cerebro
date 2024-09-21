@@ -19,7 +19,7 @@ def test_predict_function():
     """Test the predict method of the Predictor class."""
     predictor = Predictor()
     predictor.setup()
-    test_image_urls = "https://example.com/test_image.jpg"
+    test_image_urls = "https://github.com/JimothyJohn/cerebro/blob/phi/data/images/zidane.jpg"
     test_prompt = "Describe the image."
     try:
         output = predictor.predict(

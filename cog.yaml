@@ -15,3 +15,5 @@ build:
     - cd /model-cache && git lfs pull
 
 predict: "predict.py:Predictor"
+
+image: "r8.im/jimothyjohn/phi3-vision-instruct"

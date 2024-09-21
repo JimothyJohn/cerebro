@@ -23,6 +23,14 @@ MODEL_NAME = "microsoft/Phi-3.5-vision-instruct"
 MODEL_CACHE = "/model-cache"
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
+def is_ampere_or_newer():
+    if torch.cuda.is_available():
+        capability = torch.cuda.get_device_capability()
+        return capability[0] >= 8  # Ampere is compute capability 8.0+
+    return False
+
+attn_implementation = "flash_attention_2" if is_ampere_or_newer() else "eager" 
+
 class Predictor(BasePredictor):
     def setup(self):
         """Load the model into memory to make running multiple predictions efficient"""
@@ -35,8 +43,7 @@ class Predictor(BasePredictor):
                 device_map="auto",
                 torch_dtype=torch.float16,
                 trust_remote_code=True,
-                # _attn_implementation='flash_attention_2'  # or 'eager' if flash_attn not installed
-                _attn_implementation='eager'  # For pre-Ampere GPU's
+                _attn_implementation=attn_implementation  # or 'eager' if flash_attn not installed
             )
             # For best performance, use num_crops=4 for multi-frame, num_crops=16 for single-frame.
             self.processor = AutoProcessor.from_pretrained(
