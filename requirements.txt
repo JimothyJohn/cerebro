@@ -1,0 +1,11 @@
+Pillow
+packaging
+requests
+transformers
+onnxruntime-gpu
+torch
+torchvision
+cog
+pytest
+accelerate
+pyreadline3

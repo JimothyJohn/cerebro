@@ -1,0 +1,46 @@
+<!-- index.html -->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Cerebro - Dawn of Perception</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <h1>Cerebro - Dawn of Perception</h1>
+    <p>This repository provides a setup for deploying Microsoft's multi-modal Phi-3.5 model using ONNX Runtime with CUDA
+        acceleration. The goal is to create a Replicate A100 endpoint for efficient cloud deployment, making it easier,
+        faster, and more accessible to utilize vision perception models for niche use cases.</p>
+
+    <h2>Overview</h2>
+    <ul>
+        <li><strong>predict.py</strong>: The main inference script that loads the Phi-3.5 model and processes
+            predictions.</li>
+        <li><strong>requirements.txt</strong>: Lists all the dependencies required for the project.</li>
+        <li><strong>cog.yaml</strong>: Configuration file for Cog, specifying the build and run settings.</li>
+        <li><strong>devcontainer.json</strong>: Development container configuration for VS Code and GitHub Codespaces.
+        </li>
+        <li><strong>tests.py</strong>: Basic unit tests using pytest.</li>
+        <li><strong>Dockerfile</strong>: Dockerfile for building the development container.</li>
+        <li><strong>index.html</strong> and <strong>style.css</strong>: HTML version of the README for GitHub Pages.
+        </li>
+    </ul>
+
+    <h2>Features</h2>
+    <ul>
+        <li><strong>CUDA Acceleration</strong>: Leverages ONNX Runtime with CUDA for faster inference on GPUs.</li>
+        <li><strong>ONNX Runtime</strong>: Uses a pre-converted ONNX model for efficient deployment.</li>
+        <li><strong>Easy Deployment</strong>: Configurations are provided for quick setup using VS Code or GitHub
+            Codespaces.</li>
+        <li><strong>Unit Testing</strong>: Includes tests to validate the functionality of the inference script.</li>
+        <li><strong>Model Weights Pre-download</strong>: The model weights are downloaded during image build to reduce
+            startup time.</li>
+    </ul>
+
+    <!-- Additional content can be added here following the structure of README.md -->
+
+</body>
+
+</html>

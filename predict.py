@@ -1,41 +1,129 @@
-import cog
+# predict.py
+# Prediction interface for Cog ⚙️
+# https://github.com/replicate/cog/blob/main/docs/python.md
+"""
+This program is for Phi-3.5-vision-instruct, the multi-modal generation of Phi models.
+AI-generated code, please review for correctness.
+"""
+
+from cog import BasePredictor, Input
+import os
+import time
 import torch
-from io import BytesIO
-import json
+from PIL import Image
+from transformers import AutoModelForCausalLM, AutoProcessor
+import requests
+import logging
 
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
-def yolo_labels(results):
-    ogHeight, ogWidth, _ = results.imgs[0].shape
-    detections = json.loads(results.pandas().xyxy[0].to_json(orient="records"))
-    labels = ""
-    for detection in detections:
-        classification = detection["class"]
-        width = detection["xmax"] - detection["xmin"]
-        height = detection["ymax"] - detection["ymin"]
-        x = detection["xmin"] + width / 2
-        y = detection["ymin"] + height / 2
-        labels = f"{labels}{classification} {x/ogWidth} {y/ogHeight} {width/ogWidth} {height/ogHeight}\n"
+MODEL_NAME = "microsoft/Phi-3.5-vision-instruct"
+MODEL_CACHE = "/model-cache"
+DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
-    return labels
-
-
-class Predictor(cog.BasePredictor):
+class Predictor(BasePredictor):
     def setup(self):
         """Load the model into memory to make running multiple predictions efficient"""
-        self.net = torch.hub.load("ultralytics/yolov5", "yolov5s")
-        # Alternatively use a custom model
-        # self.net = torch.hub.load("ultralytics/yolov5", "custom", "./<your-weights-here>.pt")
+        start_time = time.time()
+        logger.info("Setting up the model...")
+        try:
+            # Load the model from the cache directory
+            self.model = AutoModelForCausalLM.from_pretrained(
+                MODEL_CACHE,
+                device_map="auto",
+                torch_dtype=torch.float16,
+                trust_remote_code=True,
+                # _attn_implementation='flash_attention_2'  # or 'eager' if flash_attn not installed
+                _attn_implementation='eager'  # For pre-Ampere GPU's
+            )
+            # For best performance, use num_crops=4 for multi-frame, num_crops=16 for single-frame.
+            self.processor = AutoProcessor.from_pretrained(
+                MODEL_CACHE,
+                trust_remote_code=True,
+                num_crops=4 # multi-frame
+                # num_crops=16 # single-frame, results in torch.OutOfMemoryError: CUDA out of memory
+            )
+            logger.info(f"Model loaded in {time.time() - start_time:.2f} seconds")
+        except Exception as e:
+            logger.error(f"Error during model setup: {e}")
+            raise e
 
-    # Define the input types for a prediction
+    @torch.inference_mode()
     def predict(
         self,
-        image: cog.Path = cog.Input(description="RGB input image"),
-        format: str = cog.Input(description="Format of label", default="json"),
+        image_urls: str = Input(description="Comma-separated URLs of images"),
+        prompt: str = Input(description="Input prompt"),
+        max_new_tokens: int = Input(
+            description="Max new tokens", default=1000, ge=1, le=2048
+        ),
+        temperature: float = Input(
+            description="Temperature for generation", default=0.7, ge=0.0, le=1.0
+        ),
+        do_sample: bool = Input(
+            description="Whether or not to use sampling; use greedy decoding otherwise.", default=True
+        ),
     ) -> str:
         """Run a single prediction on the model"""
-        # ... pre-processing ...
-        results = self.net(image)
-        output = results.pandas().xyxy[0].to_json(orient="records")
-        if format == "yolo":
-            output = yolo_labels(results)
-        return output
+        try:
+            # Process images
+            images = []
+            placeholder = ""
+            image_url_list = [url.strip() for url in image_urls.split(",")]
+            for idx, url in enumerate(image_url_list):
+                response = requests.get(url, stream=True)
+                if response.status_code == 200:
+                    image = Image.open(response.raw).convert("RGB")
+                    images.append(image)
+                    placeholder += f"<|image_{idx+1}|>\n"
+                else:
+                    logger.warning(f"Failed to retrieve image from URL: {url}")
+            if not images:
+                raise ValueError("No valid images were provided.")
+
+            # Prepare messages
+            messages = [
+                {"role": "user", "content": placeholder + prompt},
+            ]
+
+            # Prepare prompt
+            prepared_prompt = self.processor.tokenizer.apply_chat_template(
+                messages,
+                tokenize=False,
+                add_generation_prompt=True
+            )
+
+            # Prepare inputs
+            inputs = self.processor(
+                prepared_prompt,
+                images=images,
+                return_tensors="pt"
+            ).to(DEVICE)
+
+            # Generation arguments
+            generation_args = {
+                "max_new_tokens": max_new_tokens,
+                "temperature": temperature,
+                "do_sample": do_sample,
+                "eos_token_id": self.processor.tokenizer.eos_token_id,
+            }
+
+            # Generate output
+            outputs = self.model.generate(**inputs, **generation_args)
+
+            # Remove input tokens
+            generated_tokens = outputs[:, inputs['input_ids'].shape[1]:]
+
+            # Decode response
+            response = self.processor.batch_decode(
+                generated_tokens,
+                skip_special_tokens=True,
+                clean_up_tokenization_spaces=False
+            )[0]
+
+            return response
+
+        except Exception as e:
+            logger.error(f"Error during prediction: {e}")
+            raise e

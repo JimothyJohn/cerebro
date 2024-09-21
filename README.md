@@ -1,110 +1,97 @@
-# Deploy YOLO
+# Cerebro - Dawn of Perception
 
-This fork uses Replicate's 🐣 [Cog](https://github.com/replicate/cog) system to quickly deploy Ultralytic's 🚀 [PyTorch implementation](https://github.com/ultralytics/yolov5) of YOLOv5.
+This repository provides a setup for deploying Microsoft's multi-modal Phi-3 model using ONNX Runtime with CUDA acceleration. The goal is to create a Replicate A100 endpoint for efficient cloud deployment, making it easier, faster, and more accessible to utilize vision perception models for niche use cases.
 
-See [Cog](https://replicate.com/docs/creating-a-model#install-cog) and [YOLOv5](https://docs.ultralytics.com) for full documentation on training, testing and deployment.
+## Overview
 
-## Quickstart
+- **predict.py**: The main inference script that loads the Phi-3 model and processes predictions.
+- **requirements.txt**: Lists all the dependencies required for the project.
+- **cog.yaml**: Configuration file for Cog, specifying the build and run settings.
 
-<details open>
-<summary>Convenience script for Ubuntu</summary>
+## Features
 
-```bash
-# Install and run pretrained Cog
-sudo utils/Install.sh
-# Test endpoint
-python3 utils/Endpoint.py
-```
+- **CUDA Acceleration**: Leverages ONNX Runtime with CUDA for faster inference on GPUs.
+- **ONNX Runtime**: Uses a pre-converted ONNX model for efficient deployment.
+- **Easy Deployment**: Configurations are provided for quick setup using VS Code or GitHub Codespaces.
+- **Unit Testing**: Includes tests to validate the functionality of the inference script.
 
-</details>
+## Getting Started
 
-<details>
-<summary>Prerequisites</summary>
+### Prerequisites
 
-[Install Docker](https://docs.docker.com/get-docker/) and then install the newest version of Cog
+- NVIDIA GPU with CUDA support
+- Docker installed (for devcontainer)
+- VS Code with Remote - Containers extension (optional)
 
-```bash
-# Use Docker convenience script if you dare
-curl -fsSL https://get.docker.com -o get-docker.sh
-sudo sh get-docker.sh
-# Download and configure Cog binary
-sudo curl -o /usr/local/bin/cog -L https://github.com/replicate/cog/releases/latest/download/cog_`uname -s`_`uname -m`
-sudo chmod +x /usr/local/bin/cog
-```
+### Setup Instructions
 
-</details>
+1. **Clone the Repository**
 
-<details>
-<summary>(Optional) CPU Configuration</summary>
+   ```bash
+   git clone https://github.com/yourusername/phi-3-deployment.git
+   cd phi-3-deployment
+   ```
 
-If you want to deploy with a CPU change line 2 in [cog.yml](cog.yml) to false:
+2. **Using Dev Container**
+    
+    * Open the repository in VS Code.
+    
+    * When prompted, "Reopen in Container" to use the devcontainer setup.
+    
+    * Alternatively, you can use GitHub Codespaces for a cloud-based development environment.
 
-```yml
-build:
-  gpu: false
-```
+3. **Install Dependencies**
 
-</details>
-<details open>
-<summary>Inference</summary>
-
-Test the [pretrained model](https://github.com/ultralytics/yolov5/releases) with
+    * If not using the devcontainer, create a virtual environment and install dependencies:
 
 ```bash
-cog predict -i image=@data/images/zidane.jpg
+python -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
 ```
 
-This will output a JSON list of all detections by default:
+4. **Run Tests**
 
-```json
-{
-  'status': 'succeeded',
-  'output': '[
-    {
-      "xmin":751.9083251953,
-      "ymin":45.5722045898,
-      "xmax":1148.5522460938,
-      "ymax":716.2182006836,
-      "confidence":0.8750465512,
-      "class":0,
-      "name":"person"
-    },
-    ...
-  ]'
-}
-```
-
-You can also add an additional format argument to change the label output
+    * Ensure everything is set up correctly by running the unit tests:
 
 ```bash
-cog predict -i image=@data/images/zidane.jpg -i format=yolo
+pytest tests.py
 ```
 
-</details>
+5. **Running Inference**
 
-<details>
-<summary>Deployment</summary>
+    * You can run the predict.py script directly or set it up as part of a Cog deployment.
 
-STARTER: Deploy the model locally at [http://localhost:5000](http://localhost:5000) using the below premade scripts.
+## Usage
 
-```bash
-# To run on GPU
-docker/run_gpu.sh
-# OR to run on CPU
-docker/run_cpu.sh
-# Send test image once the container is running
-curl http://localhost:5000/predict -X POST -F input=@docs/zidane.jpg
+The predict.py script accepts image URLs and a text prompt to generate a response using the Phi-3 model.
+
+Example:
+
+```py
+from predict import Predictor
+
+predictor = Predictor()
+predictor.setup()
+response = predictor.predict(
+    image_urls="https://example.com/image1.jpg, https://example.com/image2.jpg",
+    prompt="Summarize the content of these images.",
+    max_new_tokens=100,
+    temperature=0.5,
+    do_sample=True
+)
+
+print(response)
 ```
 
-You should see the same JSON output from the Inference step.
+### Notes
 
-ADVANCED: Deploy in the cloud using the [Cloudflare Tunnel guide](DEPLOYMENT.md)
+* AI-Generated Code: Most of the code in this repository is AI-generated and should be reviewed for correctness and compatibility.
 
-</details>
+* Model Files: The ONNX model files are downloaded automatically if not present in the model-cache directory.
 
-## To-do
+### Contributing
 
-- Add more label types
-- Simplify JSON extraction
-- Bridge to Jetson platform
-- Training tutorial with Roboflow
+Contributions are welcome! Please submit a pull request or open an issue for any changes or suggestions.
+
+### License - MIT
