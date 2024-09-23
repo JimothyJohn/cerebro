@@ -4,7 +4,6 @@
 
 [![Replicate](https://replicate.com/jimothyjohn/colmap/badge)](https://replicate.com/jimothyjohn/colmap)
 
-
 This repository provides a setup for deploying Microsoft's multi-modal Phi-3 model using ONNX Runtime with CUDA acceleration. The goal is to create a Replicate A100 endpoint for efficient cloud deployment, making it easier, faster, and more accessible to utilize vision perception models for niche use cases.
 
 ## Overview
