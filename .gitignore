@@ -55,9 +55,6 @@ coverage.xml
 # VSCode
 .vscode/
 
-# Devcontainer
-.devcontainer/
-
 # Docker
 *.log
 docker-compose*.yaml
@@ -85,3 +82,4 @@ AI_GENERATED_README.md
 # My stuff
 .venv
 .cog 
+*.code-workspace

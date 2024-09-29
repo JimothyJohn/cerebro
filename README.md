@@ -1,98 +1,34 @@
 ![cerebro](docs/cerebro.png)
 
-# Cerebro - Dawn of Perception
+# Cerebro
 
-[![Replicate](https://replicate.com/jimothyjohn/colmap/badge)](https://replicate.com/jimothyjohn/colmap)
+[![Replicate](https://replicate.com/jimothyjohn/phi3-vision-instruct/badge)](https://replicate.com/jimothyjohn/phi3-vision-instruct)
 
-This repository provides a setup for deploying Microsoft's multi-modal Phi-3 model using ONNX Runtime with CUDA acceleration. The goal is to create a Replicate A100 endpoint for efficient cloud deployment, making it easier, faster, and more accessible to utilize vision perception models for niche use cases.
+Cerebro is a perception endpoint that analyzes visual data using continuously better, more generalized AI models. 
 
-## Overview
+### Engine
 
-- **predict.py**: The main inference script that loads the Phi-3 model and processes predictions.
-- **requirements.txt**: Lists all the dependencies required for the project.
-- **cog.yaml**: Configuration file for Cog, specifying the build and run settings.
-
-## Features
-
-- **CUDA Acceleration**: Leverages ONNX Runtime with CUDA for faster inference on GPUs.
-- **ONNX Runtime**: Uses a pre-converted ONNX model for efficient deployment.
-- **Easy Deployment**: Configurations are provided for quick setup using VS Code or GitHub Codespaces.
-- **Unit Testing**: Includes tests to validate the functionality of the inference script.
+The current engine is Microsoft's multi-modal [Phi-3.5-vision-instruct](https://huggingface.co/microsoft/Phi-3.5-vision-instruct) hosted on a [Replicate](https://replicate.com/) NVIDIA [A100](https://www.nvidia.com/en-us/data-center/a100/) endpoint. Phi3.5 seemed to offer the best balance of performance and speed as of September 2024. Previous endpoint was the more precise, but narrow [YOLOv8](https://docs.ultralytics.com/models/yolov8/).
 
 ## Getting Started
 
-### Prerequisites
-
-- NVIDIA GPU with CUDA support
-- Docker installed (for devcontainer)
-- VS Code with Remote - Containers extension (optional)
-
-### Setup Instructions
-
-1. **Clone the Repository**
-
-   ```bash
-   git clone https://github.com/yourusername/phi-3-deployment.git
-   cd phi-3-deployment
-   ```
-
-2. **Using Dev Container**
-    
-    * Open the repository in VS Code.
-    
-    * When prompted, "Reopen in Container" to use the devcontainer setup.
-    
-    * Alternatively, you can use GitHub Codespaces for a cloud-based development environment.
-
-3. **Install Dependencies**
-
-    * If not using the devcontainer, create a virtual environment and install dependencies:
+To run locally you should use an NVIDIA GPU with at least 8GB of VRAM.
 
 ```bash
-python -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-```
-
-4. **Run Tests**
-
-    * Ensure everything is set up correctly by running the unit tests:
-
-```bash
-pytest tests.py
-```
-
-5. **Running Inference**
-
-    * You can run the predict.py script directly or set it up as part of a Cog deployment.
-
-## Usage
-
-The predict.py script accepts image URLs and a text prompt to generate a response using the Phi-3 model.
-
-Example:
-
-```py
-from predict import Predictor
-
-predictor = Predictor()
-predictor.setup()
-response = predictor.predict(
-    image_urls="https://example.com/image1.jpg, https://example.com/image2.jpg",
-    prompt="Summarize the content of these images.",
-    max_new_tokens=100,
-    temperature=0.5,
-    do_sample=True
-)
-
-print(response)
+# Clone the repository
+git clone https://github.com/JimothyJohn/cerebro.git
+cd cerebro 
+# Use convenience script (will take a few minutes to build the first time)
+bash Quickstart
 ```
 
 ### Notes
 
-* AI-Generated Code: Most of the code in this repository is AI-generated and should be reviewed for correctness and compatibility.
+* **Most of the code in this repository is AI-generated and should be reviewed for correctness and compatibility.** You can find the prompt that generated most of this code in [PROMPT.md](PROMPT.md)
 
-* Model Files: The ONNX model files are downloaded automatically if not present in the model-cache directory.
+* Call Cerebro from an edge device with the [Ojito](https://github.com/JimothyJohn/ojito) repository.
+
+* Build your own self-hosted project on AWS with the Cerebro [reverse proxy](https://github.com/JimothyJohn/cerebro-reverse-proxy) repository.
 
 ### Contributing
 
