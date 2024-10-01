@@ -6,7 +6,7 @@ This program is for Phi-3.5-vision-instruct, the multi-modal generation of Phi m
 AI-generated code, please review for correctness.
 """
 
-from cog import BasePredictor, Input
+from cog import BasePredictor, Input, Path
 import time
 import torch
 from PIL import Image
@@ -14,6 +14,7 @@ from transformers import AutoModelForCausalLM, AutoProcessor
 import requests
 import logging
 from typing import List, Dict, Any
+import urllib.parse
 
 # Configure logging
 logging.basicConfig(level=logging.WARNING)
@@ -73,7 +74,7 @@ class Predictor(BasePredictor):
     @torch.inference_mode()
     def predict(
         self,
-        image_urls: str = Input(description="Comma-separated URLs of images"),
+        image: Path = Input(description="Image path, URL, or file path"),
         prompt: str = Input(description="Input prompt"),
         max_new_tokens: int = Input(
             description="Max new tokens", default=1024, ge=64, le=2048
@@ -87,26 +88,37 @@ class Predictor(BasePredictor):
             default=True,
         ),
     ) -> str:
-        """Run a single prediction on the model"""
+        # Extract values from FieldInfo objects if necessary
+        image = getattr(image, "default", image)
+        prompt = getattr(prompt, "default", prompt)
+        max_new_tokens = getattr(max_new_tokens, "default", max_new_tokens)
+        temperature = getattr(temperature, "default", temperature)
+        do_sample = getattr(do_sample, "default", do_sample)
+
+        # Input validation
+        if not image or str(image).strip() == "":
+            raise ValueError("Image path, URL, or file path cannot be empty")
+        if not prompt or str(prompt).strip() == "":
+            raise ValueError("Prompt cannot be empty")
+        if max_new_tokens < 64 or max_new_tokens > 2048:
+            raise ValueError("max_new_tokens must be between 64 and 2048")
+        if temperature < 0 or temperature > 1:
+            raise ValueError("Temperature must be between 0 and 1")
+
         try:
-            # Process images
-            images: List[Image.Image] = []
-            placeholder: str = ""
-            image_url_list: List[str] = [url.strip() for url in image_urls.split(",")]
-            for idx, url in enumerate(image_url_list):
-                response: requests.Response = requests.get(url, stream=True)
-                if response.status_code == 200:
-                    image = Image.open(response.raw).convert("RGB")
-                    images.append(image)
-                    placeholder += f"<|image_{idx+1}|>\n"
-                else:
-                    logger.warning(f"Failed to retrieve image from URL: {url}")
-            if not images:
-                raise ValueError("No valid images were provided.")
+            # Process image
+            if urllib.parse.urlparse(str(image)).scheme in ("http", "https"):
+                # It's a URL
+                response: requests.Response = requests.get(str(image), stream=True)
+                response.raise_for_status()
+                img = Image.open(response.raw).convert("RGB")
+            else:
+                # It's a local file or path
+                img = Image.open(image).convert("RGB")
 
             # Prepare messages
             messages: List[Dict[str, str]] = [
-                {"role": "user", "content": placeholder + prompt},
+                {"role": "user", "content": "<|image_1|>\n" + prompt},
             ]
 
             # Prepare prompt
@@ -116,7 +128,7 @@ class Predictor(BasePredictor):
 
             # Prepare inputs
             inputs: Dict[str, Any] = self.processor(
-                prepared_prompt, images=images, return_tensors="pt"
+                prepared_prompt, images=[img], return_tensors="pt"
             ).to(DEVICE)
 
             # Generation arguments
@@ -144,4 +156,4 @@ class Predictor(BasePredictor):
 
         except Exception as e:
             logger.error(f"Error during prediction: {e}")
-            raise e
+            raise

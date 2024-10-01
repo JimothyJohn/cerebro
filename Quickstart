@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Run a one-shot test with the Cog CLI
-cog predict -i prompt="Tell me a possible story about this image." -i image_urls="https://3.bp.blogspot.com/_bVtGlUaW-tA/TIYjKLOSIfI/AAAAAAAAOFg/NjhGhwLBWcE/s1600/3.jpg"
+cog predict -i prompt="Describe this image." -i image="https://3.bp.blogspot.com/_bVtGlUaW-tA/TIYjKLOSIfI/AAAAAAAAOFg/NjhGhwLBWcE/s1600/3.jpg"
 
 # Alternatively run an endpoint and poll
 # https://github.com/replicate/cog/blob/main/docs/deploy.md#getting-started
